@@ -33,8 +33,10 @@
 #include <dirent.h>
 
 // The classic Fade Effect! ;P
-int fadealpha = 255;
-bool fadein = true;
+// Wyrdgirn: Both renamed to avoid "multiple definition" error.
+// they are already defined here: Universal-Core/gui.cpp line 42 & 43
+int initFadealpha = 255;
+bool initFadein = true;
 
 // If true -> Exit PSMDSE.
 bool exiting = false;
@@ -87,19 +89,29 @@ Result Init::MainLoop() {
 		hidScanInput();
 		u32 hHeld = hidKeysHeld();
 		u32 hDown = hidKeysDown();
+	#ifdef UC_KEY_REPEAT
+        u32 hDownRepeat = hidKeysDownRepeat();
+    #endif
 		hidTouchRead(&touch);
 		C3D_FrameBegin(C3D_FRAME_SYNCDRAW);
 		C2D_TargetClear(Top, BLACK);
 		C2D_TargetClear(Bottom, BLACK);
 		Gui::clearTextBufs();
-		Gui::mainLoop(hDown, hHeld, touch);
+        
+        // Wyrdgirn: Renamed from Gui::mainLoop. see Universal-Core/gui.hpp
+	#ifdef UC_KEY_REPEAT
+		Gui::ScreenLogic(hDown, hDownRepeat, hHeld, touch);
+    #else
+		Gui::ScreenLogic(hDown, hHeld, touch);
+    #endif
+    
 		C3D_FrameEnd(0);
 
-		if (fadein == true) {
-			fadealpha -= 3;
-			if (fadealpha < 0) {
-				fadealpha = 0;
-				fadein = false;
+		if (initFadein == true) {
+			initFadealpha -= 3;
+			if (initFadealpha < 0) {
+				initFadealpha = 0;
+				initFadein = false;
 			}
 		}
 	}
